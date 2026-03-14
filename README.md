@@ -49,7 +49,6 @@ A production-grade RESTful API for personal expense tracking with AI-powered fin
 │   └── utils/
 │       ├── logger.js          # Structured logger (JSON prod / readable dev)
 │       └── validators.js      # Input sanitization & validation helpers
-├── .env.example               # Environment variable template
 └── package.json
 ```
 
@@ -72,8 +71,7 @@ cd Expense_Tracker_Backend
 npm install
 
 # 3. Configure environment
-cp .env.example .env
-# Edit .env with your values (see Environment Variables below)
+# Create a .env file with your values (see Environment Variables below)
 
 # 4. Start development server
 npm run dev
