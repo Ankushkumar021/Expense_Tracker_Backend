@@ -59,10 +59,10 @@ exports.getSummary = async (req, res) => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    const [allTime, thisMonth, lastMonth, categories, recent] = await Promise.all([
+    const [allTime, thisMonth, lastMonth, categories, recent, uniqueDays] = await Promise.all([
       Expense.aggregate([
         { $match: { userId } },
-        { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 }, avg: { $avg: "$amount" } } },
+        { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
       ]),
       Expense.aggregate([
         { $match: { userId, date: { $gte: startOfMonth } } },
@@ -78,10 +78,19 @@ exports.getSummary = async (req, res) => {
         { $sort: { total: -1 } },
       ]),
       Expense.find({ userId: req.userId }).sort({ date: -1 }).limit(5),
+      Expense.aggregate([
+        { $match: { userId } },
+        { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } } } },
+        { $count: "days" },
+      ]),
     ]);
 
+    const totalAmount = allTime[0]?.total || 0;
+    const totalDays = uniqueDays[0]?.days || 1;
+    const avgPerDay = totalAmount / totalDays;
+
     res.json({
-      allTime: allTime[0] || { total: 0, count: 0, avg: 0 },
+      allTime: { ...(allTime[0] || { total: 0, count: 0 }), avg: Math.round(avgPerDay * 100) / 100 },
       thisMonth: thisMonth[0] || { total: 0, count: 0 },
       lastMonth: lastMonth[0] || { total: 0, count: 0 },
       categories,
